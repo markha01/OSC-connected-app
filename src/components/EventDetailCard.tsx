@@ -134,6 +134,16 @@ const EventDetailCard: React.FC<EventDetailCardProps> = ({
   // Check if already responded (taken or missed)
   const alreadyResponded = event.resource.status === 'taken' || event.resource.status === 'missed';
 
+  // Determine header color based on status
+  const getHeaderGradient = () => {
+    if (event.resource.status === 'taken') {
+      return 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+    } else if (event.resource.status === 'missed') {
+      return 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)';
+    }
+    return 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)';
+  };
+
   // Card style - centered on page
   const cardStyle = {
     position: 'fixed' as const,
@@ -141,10 +151,12 @@ const EventDetailCard: React.FC<EventDetailCardProps> = ({
     left: '50%',
     transform: 'translate(-50%, -50%)',
     zIndex: 1300,
-    width: 400,
+    width: 420,
     maxWidth: 'calc(100vw - 32px)',
     maxHeight: 'calc(100vh - 32px)',
     overflow: 'auto',
+    borderRadius: 4,
+    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
   };
 
   return (
@@ -158,27 +170,39 @@ const EventDetailCard: React.FC<EventDetailCardProps> = ({
           left: 0,
           right: 0,
           bottom: 0,
-          bgcolor: 'rgba(0, 0, 0, 0.3)',
+          bgcolor: 'rgba(15, 23, 42, 0.6)',
+          backdropFilter: 'blur(4px)',
           zIndex: 1299,
         }}
       />
 
       {/* Card */}
-      <Card sx={cardStyle} elevation={8}>
+      <Card sx={cardStyle}>
         {/* Header with close button */}
         <Box
           sx={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            p: 2,
-            pb: 1,
-            bgcolor: '#3174ad',
+            p: 2.5,
+            background: getHeaderGradient(),
             color: 'white',
           }}
         >
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <MedicationIcon />
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <Box
+              sx={{
+                width: 40,
+                height: 40,
+                borderRadius: '12px',
+                backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <MedicationIcon />
+            </Box>
             <Typography variant="h6" component="div" sx={{ fontWeight: 600 }}>
               {event.resource.medication_name}
             </Typography>
@@ -188,25 +212,25 @@ const EventDetailCard: React.FC<EventDetailCardProps> = ({
             size="small"
             sx={{
               color: 'white',
-              bgcolor: 'rgba(255, 255, 255, 0.2)',
+              bgcolor: 'rgba(255, 255, 255, 0.15)',
               '&:hover': {
-                bgcolor: 'rgba(255, 255, 255, 0.3)',
+                bgcolor: 'rgba(255, 255, 255, 0.25)',
               },
             }}
           >
-            <CloseIcon />
+            <CloseIcon fontSize="small" />
           </IconButton>
         </Box>
 
-        <CardContent sx={{ pt: 2 }}>
+        <CardContent sx={{ pt: 2.5, pb: 2 }}>
           {/* Alerts */}
           {error && (
-            <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
+            <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }} onClose={() => setError(null)}>
               {error}
             </Alert>
           )}
           {success && (
-            <Alert severity="success" sx={{ mb: 2 }} onClose={() => setSuccess(null)}>
+            <Alert severity="success" sx={{ mb: 2, borderRadius: 2 }} onClose={() => setSuccess(null)}>
               {success}
             </Alert>
           )}
@@ -217,30 +241,36 @@ const EventDetailCard: React.FC<EventDetailCardProps> = ({
               <Box
                 sx={{
                   textAlign: 'center',
-                  py: 2,
-                  px: 1,
+                  py: 2.5,
+                  px: 2,
                   bgcolor: alreadyResponded
                     ? event.resource.status === 'taken'
-                      ? 'success.50'
-                      : 'error.50'
-                    : 'grey.50',
-                  borderRadius: 2,
-                  mb: 2,
+                      ? 'rgba(16, 185, 129, 0.08)'
+                      : 'rgba(239, 68, 68, 0.08)'
+                    : 'rgba(99, 102, 241, 0.05)',
+                  borderRadius: 3,
+                  mb: 2.5,
+                  border: '1px solid',
+                  borderColor: alreadyResponded
+                    ? event.resource.status === 'taken'
+                      ? 'rgba(16, 185, 129, 0.2)'
+                      : 'rgba(239, 68, 68, 0.2)'
+                    : 'rgba(99, 102, 241, 0.1)',
                 }}
               >
                 {alreadyResponded ? (
-                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1.5 }}>
                     {event.resource.status === 'taken' ? (
                       <>
-                        <CheckCircleIcon color="success" />
-                        <Typography variant="body1" color="success.main" fontWeight={600}>
+                        <CheckCircleIcon sx={{ color: '#10b981', fontSize: 28 }} />
+                        <Typography variant="body1" sx={{ color: '#059669', fontWeight: 600 }}>
                           Medication Taken
                         </Typography>
                       </>
                     ) : (
                       <>
-                        <CancelIcon color="error" />
-                        <Typography variant="body1" color="error.main" fontWeight={600}>
+                        <CancelIcon sx={{ color: '#ef4444', fontSize: 28 }} />
+                        <Typography variant="body1" sx={{ color: '#dc2626', fontWeight: 600 }}>
                           Medication Missed
                         </Typography>
                       </>
@@ -248,27 +278,37 @@ const EventDetailCard: React.FC<EventDetailCardProps> = ({
                   </Box>
                 ) : (
                   <>
-                    <Typography variant="subtitle1" fontWeight={600} gutterBottom>
+                    <Typography variant="subtitle1" fontWeight={600} gutterBottom sx={{ color: '#1e293b' }}>
                       Have you taken your medicine?
                     </Typography>
-                    <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mt: 1.5 }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mt: 2 }}>
                       <Button
                         variant="contained"
-                        color="success"
                         startIcon={submittingResponse ? <CircularProgress size={16} color="inherit" /> : <CheckCircleIcon />}
                         onClick={() => handleMedicationResponse(true)}
                         disabled={submittingResponse}
-                        sx={{ minWidth: 100 }}
+                        sx={{
+                          minWidth: 110,
+                          background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                          '&:hover': {
+                            background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+                          },
+                        }}
                       >
                         Yes
                       </Button>
                       <Button
                         variant="contained"
-                        color="error"
                         startIcon={submittingResponse ? <CircularProgress size={16} color="inherit" /> : <CancelIcon />}
                         onClick={() => handleMedicationResponse(false)}
                         disabled={submittingResponse}
-                        sx={{ minWidth: 100 }}
+                        sx={{
+                          minWidth: 110,
+                          background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+                          '&:hover': {
+                            background: 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)',
+                          },
+                        }}
                       >
                         No
                       </Button>
@@ -276,40 +316,53 @@ const EventDetailCard: React.FC<EventDetailCardProps> = ({
                   </>
                 )}
               </Box>
-              <Divider sx={{ mb: 2 }} />
+              <Divider sx={{ mb: 2.5 }} />
             </>
           )}
 
           {/* Medication Info */}
-          <Box sx={{ mb: 2 }}>
-            <Typography variant="body2" color="text.secondary">
-              Dosage Form
-            </Typography>
-            <Typography variant="body1" sx={{ textTransform: 'capitalize' }}>
-              {medication?.dosage_form || 'N/A'}
-            </Typography>
+          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, mb: 2.5 }}>
+            <Box
+              sx={{
+                p: 1.5,
+                borderRadius: 2,
+                backgroundColor: '#f8fafc',
+              }}
+            >
+              <Typography variant="caption" color="text.secondary" fontWeight={500}>
+                Dosage Form
+              </Typography>
+              <Typography variant="body2" sx={{ textTransform: 'capitalize', fontWeight: 600, mt: 0.5 }}>
+                {medication?.dosage_form || 'N/A'}
+              </Typography>
+            </Box>
+            <Box
+              sx={{
+                p: 1.5,
+                borderRadius: 2,
+                backgroundColor: '#f8fafc',
+              }}
+            >
+              <Typography variant="caption" color="text.secondary" fontWeight={500}>
+                Scheduled Date
+              </Typography>
+              <Typography variant="body2" sx={{ fontWeight: 600, mt: 0.5 }}>
+                {moment(event.start).format('MMM D, YYYY')}
+              </Typography>
+            </Box>
           </Box>
 
-          <Box sx={{ mb: 2 }}>
-            <Typography variant="body2" color="text.secondary">
-              Scheduled Date
-            </Typography>
-            <Typography variant="body1">
-              {moment(event.start).format('dddd, MMMM D, YYYY')}
-            </Typography>
-          </Box>
-
-          <Divider sx={{ my: 2 }} />
+          <Divider sx={{ my: 2.5 }} />
 
           {/* Change Time Section */}
           <Box sx={{ mb: 3 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-              <ScheduleIcon color="action" fontSize="small" />
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
+              <ScheduleIcon sx={{ color: '#6366f1', fontSize: 20 }} />
               <Typography variant="subtitle2" fontWeight={600}>
                 Reminder Time
               </Typography>
             </Box>
-            <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+            <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
               <TextField
                 type="time"
                 value={newTime}
@@ -323,22 +376,22 @@ const EventDetailCard: React.FC<EventDetailCardProps> = ({
                 size="small"
                 onClick={handleTimeChange}
                 disabled={saving || newTime === moment(event.start).format('HH:mm')}
-                sx={{ minWidth: 80 }}
+                sx={{ minWidth: 90, py: 1 }}
               >
                 {saving ? <CircularProgress size={20} /> : 'Update'}
               </Button>
             </Box>
-            <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
-              This will update the reminder time for all scheduled days
+            <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+              Updates reminder time for all scheduled days
             </Typography>
           </Box>
 
-          <Divider sx={{ my: 2 }} />
+          <Divider sx={{ my: 2.5 }} />
 
           {/* Notes Section */}
           <Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-              <NoteIcon color="action" fontSize="small" />
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
+              <NoteIcon sx={{ color: '#f59e0b', fontSize: 20 }} />
               <Typography variant="subtitle2" fontWeight={600}>
                 Notes
               </Typography>
@@ -346,19 +399,19 @@ const EventDetailCard: React.FC<EventDetailCardProps> = ({
 
             {/* Existing Notes */}
             {existingNotes.length > 0 && (
-              <Box sx={{ mb: 2, maxHeight: 100, overflow: 'auto' }}>
+              <Box sx={{ mb: 2, maxHeight: 120, overflow: 'auto' }}>
                 {existingNotes.map((note) => (
                   <Box
                     key={note.id}
                     sx={{
-                      p: 1,
+                      p: 1.5,
                       mb: 1,
-                      bgcolor: 'grey.100',
-                      borderRadius: 1,
-                      fontSize: '0.875rem',
+                      bgcolor: 'rgba(245, 158, 11, 0.08)',
+                      borderRadius: 2,
+                      border: '1px solid rgba(245, 158, 11, 0.15)',
                     }}
                   >
-                    <Typography variant="body2">{note.content}</Typography>
+                    <Typography variant="body2" sx={{ mb: 0.5 }}>{note.content}</Typography>
                     <Typography variant="caption" color="text.secondary">
                       {moment(note.created_at).format('MMM D, YYYY h:mm A')}
                     </Typography>
@@ -376,18 +429,24 @@ const EventDetailCard: React.FC<EventDetailCardProps> = ({
               size="small"
               value={noteContent}
               onChange={(e) => setNoteContent(e.target.value)}
-              sx={{ mb: 1 }}
             />
           </Box>
         </CardContent>
 
-        <CardActions sx={{ px: 2, pb: 2, pt: 0 }}>
+        <CardActions sx={{ px: 2.5, pb: 2.5, pt: 0 }}>
           <Button
             variant="contained"
-            startIcon={saving ? <CircularProgress size={16} /> : <SaveIcon />}
+            startIcon={saving ? <CircularProgress size={16} color="inherit" /> : <SaveIcon />}
             onClick={handleSaveNote}
             disabled={saving || !noteContent.trim()}
             fullWidth
+            sx={{
+              py: 1.25,
+              background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+              '&:hover': {
+                background: 'linear-gradient(135deg, #d97706 0%, #b45309 100%)',
+              },
+            }}
           >
             Save Note
           </Button>

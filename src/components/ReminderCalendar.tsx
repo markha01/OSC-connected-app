@@ -4,7 +4,8 @@ import { Calendar, momentLocalizer } from 'react-big-calendar';
 import type { View, NavigateAction } from 'react-big-calendar';
 import moment from 'moment';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
-import { Box, Paper, Typography, Chip } from '@mui/material';
+import { Box, Paper, Typography, Chip, Avatar } from '@mui/material';
+import { CalendarMonth as CalendarIcon } from '@mui/icons-material';
 import { useReminder } from '../contexts/ReminderContext';
 import type { CalendarEvent } from '../types';
 import EventDetailCard from './EventDetailCard';
@@ -44,22 +45,28 @@ const ReminderCalendar = () => {
 
   // Custom event style based on status
   const eventStyleGetter = (event: CalendarEvent) => {
-    let backgroundColor = '#3174ad'; // Default blue (pending)
+    let background = 'linear-gradient(135deg, #6366f1 0%, #818cf8 100%)'; // Default purple (pending)
+    let boxShadow = '0 2px 8px rgba(99, 102, 241, 0.3)';
 
     if (event.resource.status === 'taken') {
-      backgroundColor = '#4caf50'; // Green
+      background = 'linear-gradient(135deg, #10b981 0%, #34d399 100%)'; // Green
+      boxShadow = '0 2px 8px rgba(16, 185, 129, 0.3)';
     } else if (event.resource.status === 'missed') {
-      backgroundColor = '#f44336'; // Red
+      background = 'linear-gradient(135deg, #ef4444 0%, #f87171 100%)'; // Red
+      boxShadow = '0 2px 8px rgba(239, 68, 68, 0.3)';
     }
 
     return {
       style: {
-        backgroundColor,
-        borderRadius: '5px',
-        opacity: 0.8,
+        background,
+        borderRadius: '8px',
         color: 'white',
-        border: '0px',
+        border: 'none',
         display: 'block',
+        boxShadow,
+        padding: '2px 6px',
+        fontSize: '0.8rem',
+        fontWeight: 500,
       },
     };
   };
@@ -94,31 +101,103 @@ const ReminderCalendar = () => {
 
   return (
     <>
-      <Paper sx={{ p: 3 }}>
-        <Box sx={{ mb: 3 }}>
-          <Typography variant="h5" gutterBottom>
-            Medication Calendar
-          </Typography>
-          <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+      <Paper
+        sx={{
+          p: { xs: 2, sm: 3 },
+          background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
+        }}
+      >
+        {/* Header */}
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: { xs: 'column', sm: 'row' },
+            justifyContent: 'space-between',
+            alignItems: { xs: 'flex-start', sm: 'center' },
+            gap: 2,
+            mb: 3,
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Avatar
+              sx={{
+                width: 48,
+                height: 48,
+                background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+                boxShadow: '0 4px 14px rgba(99, 102, 241, 0.4)',
+              }}
+            >
+              <CalendarIcon sx={{ fontSize: 26 }} />
+            </Avatar>
+            <Box>
+              <Typography
+                variant="h4"
+                sx={{
+                  fontWeight: 700,
+                  background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                }}
+              >
+                Calendar
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Track your medication schedule
+              </Typography>
+            </Box>
+          </Box>
+
+          {/* Legend */}
+          <Box
+            sx={{
+              display: 'flex',
+              gap: 1.5,
+              flexWrap: 'wrap',
+              p: 1.5,
+              borderRadius: 2,
+              backgroundColor: 'rgba(0, 0, 0, 0.02)',
+            }}
+          >
             <Chip
               label="Pending"
-              sx={{ backgroundColor: '#3174ad', color: 'white' }}
               size="small"
+              sx={{
+                background: 'linear-gradient(135deg, #6366f1 0%, #818cf8 100%)',
+                color: 'white',
+                fontWeight: 500,
+              }}
             />
             <Chip
               label="Taken"
-              sx={{ backgroundColor: '#4caf50', color: 'white' }}
               size="small"
+              sx={{
+                background: 'linear-gradient(135deg, #10b981 0%, #34d399 100%)',
+                color: 'white',
+                fontWeight: 500,
+              }}
             />
             <Chip
               label="Missed"
-              sx={{ backgroundColor: '#f44336', color: 'white' }}
               size="small"
+              sx={{
+                background: 'linear-gradient(135deg, #ef4444 0%, #f87171 100%)',
+                color: 'white',
+                fontWeight: 500,
+              }}
             />
           </Box>
         </Box>
 
-        <Box sx={{ height: 600 }}>
+        {/* Calendar Container */}
+        <Box
+          sx={{
+            height: { xs: 450, sm: 550, md: 600 },
+            '& .rbc-calendar': {
+              fontFamily: 'inherit',
+            },
+          }}
+        >
           <Calendar<CalendarEvent>
             localizer={localizer}
             events={calendarEvents}

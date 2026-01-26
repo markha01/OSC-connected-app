@@ -10,7 +10,16 @@ import {
   MenuItem,
   Box,
   Alert,
+  Typography,
+  IconButton,
+  CircularProgress,
 } from '@mui/material';
+import {
+  Close as CloseIcon,
+  Medication as MedicationIcon,
+  Add as AddIcon,
+  Save as SaveIcon,
+} from '@mui/icons-material';
 import type { DosageForm, MedicationFormData, Medication } from '../types';
 import { useMedication } from '../contexts/MedicationContext';
 
@@ -95,14 +104,70 @@ const MedicationForm: React.FC<MedicationFormProps> = ({ open, onClose, editMedi
   };
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-      <DialogTitle>
-        {editMedication ? 'Edit Medication' : 'Add New Medication'}
-      </DialogTitle>
+    <Dialog
+      open={open}
+      onClose={handleClose}
+      maxWidth="sm"
+      fullWidth
+      PaperProps={{
+        sx: {
+          borderRadius: 3,
+          overflow: 'hidden',
+        },
+      }}
+    >
+      {/* Header */}
+      <Box
+        sx={{
+          background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+          px: 3,
+          py: 2.5,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }}
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Box
+            sx={{
+              width: 40,
+              height: 40,
+              borderRadius: '12px',
+              backgroundColor: 'rgba(255, 255, 255, 0.2)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <MedicationIcon sx={{ color: 'white', fontSize: 22 }} />
+          </Box>
+          <Typography variant="h6" sx={{ color: 'white', fontWeight: 600 }}>
+            {editMedication ? 'Edit Medication' : 'Add New Medication'}
+          </Typography>
+        </Box>
+        <IconButton
+          onClick={handleClose}
+          size="small"
+          sx={{
+            color: 'white',
+            backgroundColor: 'rgba(255, 255, 255, 0.1)',
+            '&:hover': {
+              backgroundColor: 'rgba(255, 255, 255, 0.2)',
+            },
+          }}
+        >
+          <CloseIcon fontSize="small" />
+        </IconButton>
+      </Box>
+
       <form onSubmit={handleSubmit}>
-        <DialogContent>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            {error && <Alert severity="error">{error}</Alert>}
+        <DialogContent sx={{ pt: 3, pb: 2 }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            {error && (
+              <Alert severity="error" sx={{ borderRadius: 2 }}>
+                {error}
+              </Alert>
+            )}
 
             <TextField
               label="Medication Name"
@@ -111,7 +176,8 @@ const MedicationForm: React.FC<MedicationFormProps> = ({ open, onClose, editMedi
               fullWidth
               required
               autoFocus
-              placeholder="e.g., Aspirin"
+              placeholder="e.g., Aspirin, Ibuprofen"
+              helperText="Enter the name of your medication"
             />
 
             <TextField
@@ -121,6 +187,7 @@ const MedicationForm: React.FC<MedicationFormProps> = ({ open, onClose, editMedi
               onChange={(e) => handleChange('dosage_form', e.target.value as DosageForm)}
               fullWidth
               required
+              helperText="Select how you take this medication"
             >
               {DOSAGE_FORMS.map((form) => (
                 <MenuItem key={form} value={form}>
@@ -130,11 +197,36 @@ const MedicationForm: React.FC<MedicationFormProps> = ({ open, onClose, editMedi
             </TextField>
           </Box>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleClose} disabled={submitting}>
+
+        <DialogActions sx={{ px: 3, pb: 3, pt: 1, gap: 1.5 }}>
+          <Button
+            onClick={handleClose}
+            disabled={submitting}
+            sx={{
+              px: 3,
+              color: 'text.secondary',
+              '&:hover': {
+                backgroundColor: 'rgba(0, 0, 0, 0.04)',
+              },
+            }}
+          >
             Cancel
           </Button>
-          <Button type="submit" variant="contained" disabled={submitting}>
+          <Button
+            type="submit"
+            variant="contained"
+            disabled={submitting}
+            startIcon={
+              submitting ? (
+                <CircularProgress size={18} color="inherit" />
+              ) : editMedication ? (
+                <SaveIcon />
+              ) : (
+                <AddIcon />
+              )
+            }
+            sx={{ px: 3 }}
+          >
             {submitting ? 'Saving...' : editMedication ? 'Update' : 'Add Medication'}
           </Button>
         </DialogActions>

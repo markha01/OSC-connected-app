@@ -1,42 +1,153 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+/* App-specific styles */
+
+/* Page transitions */
+.page-enter {
+  opacity: 0;
+  transform: translateY(10px);
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+.page-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
+/* Card hover animations */
+.card-hover {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(99, 102, 241, 0.15);
+}
+
+/* Status indicators */
+.status-pending {
+  background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%);
+}
+
+.status-taken {
+  background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+}
+
+.status-missed {
+  background: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
+}
+
+/* Gradient text effect */
+.gradient-text {
+  background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Glass effect for overlays */
+.glass {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* Pulse animation for reminders */
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
   }
-  to {
-    transform: rotate(360deg);
+  50% {
+    transform: scale(1.05);
   }
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
+.pulse {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* Calendar customizations */
+.rbc-calendar {
+  font-family: 'Inter', sans-serif !important;
+}
+
+.rbc-toolbar {
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px !important;
+}
+
+.rbc-toolbar button {
+  border-radius: 8px !important;
+  border: 1px solid #e2e8f0 !important;
+  padding: 8px 16px !important;
+  font-weight: 500 !important;
+  color: #475569 !important;
+  background: #fff !important;
+  transition: all 0.2s ease !important;
+}
+
+.rbc-toolbar button:hover {
+  background: #f8fafc !important;
+  border-color: #6366f1 !important;
+  color: #6366f1 !important;
+}
+
+.rbc-toolbar button.rbc-active {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
+  border-color: #6366f1 !important;
+  color: white !important;
+}
+
+.rbc-header {
+  padding: 12px 8px !important;
+  font-weight: 600 !important;
+  color: #475569 !important;
+  background: #f8fafc !important;
+}
+
+.rbc-today {
+  background-color: rgba(99, 102, 241, 0.08) !important;
+}
+
+.rbc-event {
+  border-radius: 6px !important;
+  padding: 4px 8px !important;
+  font-weight: 500 !important;
+  border: none !important;
+}
+
+.rbc-event:focus {
+  outline: 2px solid #6366f1 !important;
+  outline-offset: 2px !important;
+}
+
+.rbc-day-slot .rbc-time-slot {
+  border-top: 1px solid #f1f5f9 !important;
+}
+
+.rbc-month-view {
+  border-radius: 12px !important;
+  overflow: hidden !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+.rbc-month-row + .rbc-month-row {
+  border-top: 1px solid #e2e8f0 !important;
+}
+
+.rbc-day-bg + .rbc-day-bg {
+  border-left: 1px solid #e2e8f0 !important;
+}
+
+/* Responsive calendar */
+@media (max-width: 768px) {
+  .rbc-toolbar {
+    justify-content: center;
   }
-}
 
-.card {
-  padding: 2em;
-}
-
-.read-the-docs {
-  color: #888;
+  .rbc-toolbar-label {
+    width: 100%;
+    text-align: center;
+    order: -1;
+    margin-bottom: 8px;
+  }
 }
