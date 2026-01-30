@@ -11,7 +11,7 @@ pnpm-debug.log*
 lerna-debug.log*
 
 node_modules
-dist
+# dist  # Committed for deployment since osaas.io can't run vite build
 dist-ssr
 *.local
 
