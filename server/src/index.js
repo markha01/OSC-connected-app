@@ -4,7 +4,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { testConnection } from './config/database.js';
+import { testConnection, getConnection } from './config/database.js';
 import medicationsRouter from './routes/medications.js';
 import remindersRouter from './routes/reminders.js';
 import reminderLogsRouter from './routes/reminderLogs.js';
@@ -56,6 +56,58 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Internal server error' });
 });
 
+// Initialize database tables
+async function initializeTables() {
+  const createTablesSQL = [
+    `CREATE TABLE IF NOT EXISTS medications (
+      id VARCHAR(36) PRIMARY KEY,
+      name VARCHAR(255) NOT NULL,
+      dosage_form ENUM('capsules', 'tablets', 'oral liquid', 'inhalers', 'injections', 'nasal spray', 'cream', 'ear drops', 'eye drops', 'lozenges') NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
+    `CREATE TABLE IF NOT EXISTS reminders (
+      id VARCHAR(36) PRIMARY KEY,
+      medication_id VARCHAR(36) NOT NULL,
+      time VARCHAR(5) NOT NULL,
+      days JSON NOT NULL,
+      status ENUM('pending', 'taken', 'missed') DEFAULT 'pending',
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (medication_id) REFERENCES medications(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
+    `CREATE TABLE IF NOT EXISTS reminder_logs (
+      id VARCHAR(36) PRIMARY KEY,
+      reminder_id VARCHAR(36) NOT NULL,
+      medication_id VARCHAR(36) NOT NULL,
+      scheduled_time TIMESTAMP NOT NULL,
+      taken BOOLEAN NOT NULL,
+      logged_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (reminder_id) REFERENCES reminders(id) ON DELETE CASCADE,
+      FOREIGN KEY (medication_id) REFERENCES medications(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
+    `CREATE TABLE IF NOT EXISTS notes (
+      id VARCHAR(36) PRIMARY KEY,
+      medication_id VARCHAR(36) NOT NULL,
+      content TEXT NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (medication_id) REFERENCES medications(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`
+  ];
+
+  let conn;
+  try {
+    conn = await getConnection();
+    for (const sql of createTablesSQL) {
+      await conn.query(sql);
+    }
+    console.log('✅ Database tables initialized');
+  } catch (err) {
+    console.error('Error initializing tables:', err.message);
+  } finally {
+    if (conn) conn.release();
+  }
+}
+
 // Start server
 async function startServer() {
   try {
@@ -65,6 +117,9 @@ async function startServer() {
       console.error('❌ Failed to connect to database. Please check your .env configuration.');
       process.exit(1);
     }
+
+    // Initialize tables
+    await initializeTables();
 
     // Start listening
     app.listen(PORT, () => {
