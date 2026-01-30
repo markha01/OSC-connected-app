@@ -9,7 +9,6 @@ import {
   Box,
   Alert,
   CircularProgress,
-  Avatar,
   IconButton,
 } from '@mui/material';
 import {
