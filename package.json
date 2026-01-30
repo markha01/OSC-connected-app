@@ -5,10 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "TMPDIR=/tmp vite build",
+    "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "start": "npm run build && serve -s dist -l ${PORT:-3000}"
+    "start": "serve -s dist -l ${PORT:-3000}"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
