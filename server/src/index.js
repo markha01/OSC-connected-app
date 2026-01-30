@@ -2,6 +2,8 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { testConnection } from './config/database.js';
 import medicationsRouter from './routes/medications.js';
 import remindersRouter from './routes/reminders.js';
@@ -10,30 +12,21 @@ import notesRouter from './routes/notes.js';
 
 dotenv.config();
 
+// Get directory name for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const distPath = path.join(__dirname, '../../dist');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware
-const allowedOrigins = [
-  'http://localhost:5173',  // Vite dev server
-  'http://localhost:5174',  // Vite dev server (alternate port)
-  'http://localhost:4173',  // Vite preview server
-  process.env.FRONTEND_URL
-].filter(Boolean);
-
-app.use(cors({
-  origin: (origin, callback) => {
-    // Allow requests with no origin (mobile apps, curl, etc.)
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true
-}));
+app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Serve static frontend files
+app.use(express.static(distPath));
 
 // Request logging middleware
 app.use((req, res, next) => {
@@ -52,9 +45,9 @@ app.use('/api/reminders', remindersRouter);
 app.use('/api/reminder-logs', reminderLogsRouter);
 app.use('/api/notes', notesRouter);
 
-// 404 handler
-app.use((req, res) => {
-  res.status(404).json({ error: 'Route not found' });
+// SPA fallback - serve index.html for non-API routes
+app.get('*', (req, res) => {
+  res.sendFile(path.join(distPath, 'index.html'));
 });
 
 // Error handler

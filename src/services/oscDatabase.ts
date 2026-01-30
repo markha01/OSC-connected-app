@@ -1,8 +1,8 @@
 // OSC Database Service - MCP Server Integration
 import type { Medication, Reminder, ReminderLog, Note, MedicationFormData, ReminderFormData, NoteFormData } from '../types';
 
-// Base URL for OSC MCP Server - Update this with your actual OSC endpoint
-const OSC_API_BASE = import.meta.env.VITE_OSC_API_URL || 'http://localhost:3000/api';
+// Base URL for API - uses relative path when served from same server
+const OSC_API_BASE = import.meta.env.VITE_OSC_API_URL || '/api';
 
 // Helper function for API calls
 async function fetchAPI<T>(endpoint: string, options?: RequestInit): Promise<T> {
