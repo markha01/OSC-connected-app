@@ -9,6 +9,7 @@ import medicationsRouter from './routes/medications.js';
 import remindersRouter from './routes/reminders.js';
 import reminderLogsRouter from './routes/reminderLogs.js';
 import notesRouter from './routes/notes.js';
+import authRouter from './routes/auth.js';
 
 dotenv.config();
 
@@ -40,6 +41,7 @@ app.get('/health', (req, res) => {
 });
 
 // API Routes
+app.use('/api/auth', authRouter);
 app.use('/api/medications', medicationsRouter);
 app.use('/api/reminders', remindersRouter);
 app.use('/api/reminder-logs', reminderLogsRouter);
@@ -59,6 +61,14 @@ app.use((err, req, res, next) => {
 // Initialize database tables
 async function initializeTables() {
   const createTablesSQL = [
+    `CREATE TABLE IF NOT EXISTS users (
+      id VARCHAR(36) PRIMARY KEY,
+      username VARCHAR(100) NOT NULL UNIQUE,
+      email VARCHAR(255) NOT NULL UNIQUE,
+      password_hash VARCHAR(255) NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      INDEX idx_email (email)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
     `CREATE TABLE IF NOT EXISTS medications (
       id VARCHAR(36) PRIMARY KEY,
       name VARCHAR(255) NOT NULL,
@@ -127,6 +137,9 @@ async function startServer() {
       console.log(`📡 API available at http://localhost:${PORT}/api`);
       console.log(`🏥 Health check at http://localhost:${PORT}/health`);
       console.log(`\nAvailable endpoints:`);
+      console.log(`  POST   /api/auth/register`);
+      console.log(`  POST   /api/auth/login`);
+      console.log(`  GET    /api/auth/me`);
       console.log(`  GET    /api/medications`);
       console.log(`  POST   /api/medications`);
       console.log(`  GET    /api/medications/:id`);

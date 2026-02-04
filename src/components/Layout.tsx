@@ -8,12 +8,16 @@ import {
   Box,
   Tabs,
   Tab,
+  IconButton,
+  Tooltip,
 } from '@mui/material';
 import {
   LocalHospital as MedicineIcon,
   Medication as MedicationTabIcon,
   CalendarMonth as CalendarIcon,
+  Logout as LogoutIcon,
 } from '@mui/icons-material';
+import { useAuth } from '../contexts/AuthContext';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -22,6 +26,8 @@ interface LayoutProps {
 }
 
 const Layout: React.FC<LayoutProps> = ({ children, currentTab, onTabChange }) => {
+  const { user, logout } = useAuth();
+
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     onTabChange(newValue);
   };
@@ -82,6 +88,34 @@ const Layout: React.FC<LayoutProps> = ({ children, currentTab, onTabChange }) =>
                 Your health companion
               </Typography>
             </Box>
+          </Box>
+
+          {/* User info and logout */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Typography
+              variant="body2"
+              sx={{
+                fontWeight: 500,
+                opacity: 0.9,
+                display: { xs: 'none', sm: 'block' },
+              }}
+            >
+              {user?.username}
+            </Typography>
+            <Tooltip title="Logout">
+              <IconButton
+                onClick={logout}
+                sx={{
+                  color: 'white',
+                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                  '&:hover': {
+                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                  },
+                }}
+              >
+                <LogoutIcon sx={{ fontSize: 20 }} />
+              </IconButton>
+            </Tooltip>
           </Box>
         </Toolbar>
         <Box sx={{ px: 2, pb: 1 }}>

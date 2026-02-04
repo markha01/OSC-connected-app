@@ -2,10 +2,13 @@
 import { useState, useEffect } from 'react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
-import { Box, Snackbar, Alert } from '@mui/material';
+import { Box, CircularProgress } from '@mui/material';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { MedicationProvider } from './contexts/MedicationContext';
 import { ReminderProvider } from './contexts/ReminderContext';
 import Layout from './components/Layout';
+import LoginPage from './components/LoginPage';
+import RegisterPage from './components/RegisterPage';
 import MedicationList from './components/MedicationList';
 import MedicationDetail from './components/MedicationDetail';
 import ReminderCalendar from './components/ReminderCalendar';
@@ -188,23 +191,24 @@ const theme = createTheme({
   },
 });
 
-function App() {
+// Inner app content that requires authentication
+function AppContent() {
+  const { isAuthenticated, loading } = useAuth();
   const [currentTab, setCurrentTab] = useState(0);
   const [selectedMedication, setSelectedMedication] = useState<Medication | null>(null);
-  const [notificationPermission, setNotificationPermission] = useState<string>('default');
+  const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
 
   // Request notification permission on mount
   useEffect(() => {
     const requestPermission = async () => {
-      const granted = await notificationService.requestPermission();
-      setNotificationPermission(granted ? 'granted' : 'denied');
+      await notificationService.requestPermission();
     };
     requestPermission();
   }, []);
 
   const handleTabChange = (newValue: number) => {
     setCurrentTab(newValue);
-    setSelectedMedication(null); // Clear selection when changing tabs
+    setSelectedMedication(null);
   };
 
   const handleSelectMedication = (medication: Medication) => {
@@ -215,51 +219,77 @@ function App() {
     setSelectedMedication(null);
   };
 
+  // Show loading spinner while checking auth
+  if (loading) {
+    return (
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          minHeight: '100vh',
+          background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
+        }}
+      >
+        <CircularProgress size={48} />
+      </Box>
+    );
+  }
+
+  // Show login/register if not authenticated
+  if (!isAuthenticated) {
+    return authMode === 'login' ? (
+      <LoginPage onSwitchToRegister={() => setAuthMode('register')} />
+    ) : (
+      <RegisterPage onSwitchToLogin={() => setAuthMode('login')} />
+    );
+  }
+
+  // Authenticated app content
+  return (
+    <MedicationProvider>
+      <ReminderProvider>
+        <Layout currentTab={currentTab} onTabChange={handleTabChange}>
+          {/* Tab 0: Medications */}
+          {currentTab === 0 && (
+            <Box>
+              {selectedMedication ? (
+                <MedicationDetail
+                  medication={selectedMedication}
+                  onBack={handleBackToList}
+                />
+              ) : (
+                <MedicationList onSelectMedication={handleSelectMedication} />
+              )}
+            </Box>
+          )}
+
+          {/* Tab 1: Calendar */}
+          {currentTab === 1 && (
+            <Box>
+              <ReminderCalendar />
+            </Box>
+          )}
+
+          {/* Reminder Notification Dialog */}
+          <ReminderNotification />
+
+          {/* Background Reminder Checker */}
+          <ReminderChecker />
+        </Layout>
+      </ReminderProvider>
+    </MedicationProvider>
+  );
+}
+
+// Main App component with providers
+function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <MedicationProvider>
-        <ReminderProvider>
-          <Layout currentTab={currentTab} onTabChange={handleTabChange}>
-            {/* Notification permission snackbar 
-            <Snackbar
-              open={notificationPermission === 'denied'}
-              anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-            >
-              <Alert severity="warning" sx={{ width: '100%' }}>
-                Browser notifications are disabled. Please enable them to receive medication reminders.
-              </Alert>
-            </Snackbar>*/}
-
-            {/* Tab 0: Medications */}
-            {currentTab === 0 && (
-              <Box>
-                {selectedMedication ? (
-                  <MedicationDetail
-                    medication={selectedMedication}
-                    onBack={handleBackToList}
-                  />
-                ) : (
-                  <MedicationList onSelectMedication={handleSelectMedication} />
-                )}
-              </Box>
-            )}
-
-            {/* Tab 1: Calendar */}
-            {currentTab === 1 && (
-              <Box>
-                <ReminderCalendar />
-              </Box>
-            )}
-
-            {/* Reminder Notification Dialog */}
-            <ReminderNotification />
-
-            {/* Background Reminder Checker */}
-            <ReminderChecker />
-          </Layout>
-        </ReminderProvider>
-      </MedicationProvider>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
     </ThemeProvider>
   );
 }
