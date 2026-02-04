@@ -71,10 +71,13 @@ async function initializeTables() {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
     `CREATE TABLE IF NOT EXISTS medications (
       id VARCHAR(36) PRIMARY KEY,
+      user_id VARCHAR(36) NOT NULL,
       name VARCHAR(255) NOT NULL,
       dosage_form ENUM('capsules', 'tablets', 'oral liquid', 'inhalers', 'injections', 'nasal spray', 'cream', 'ear drops', 'eye drops', 'lozenges') NOT NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      INDEX idx_user_id (user_id),
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
     `CREATE TABLE IF NOT EXISTS reminders (
       id VARCHAR(36) PRIMARY KEY,
@@ -110,6 +113,22 @@ async function initializeTables() {
     for (const sql of createTablesSQL) {
       await conn.query(sql);
     }
+
+    // Migration: Add user_id to existing medications table if it doesn't exist
+    try {
+      const columns = await conn.query(
+        "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'medications' AND COLUMN_NAME = 'user_id'"
+      );
+      if (columns.length === 0) {
+        await conn.query('ALTER TABLE medications ADD COLUMN user_id VARCHAR(36) AFTER id');
+        await conn.query('ALTER TABLE medications ADD INDEX idx_user_id (user_id)');
+        console.log('✅ Migration: Added user_id column to medications table');
+      }
+    } catch (migrationErr) {
+      // Column might already exist or table structure issue
+      console.log('Migration check completed');
+    }
+
     console.log('✅ Database tables initialized');
   } catch (err) {
     console.error('Error initializing tables:', err.message);

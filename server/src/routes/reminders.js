@@ -2,8 +2,12 @@
 import express from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { query } from '../config/database.js';
+import { authenticateToken } from '../middleware/auth.js';
 
 const router = express.Router();
+
+// Apply authentication to all reminder routes
+router.use(authenticateToken);
 
 // Helper to format date for MariaDB (YYYY-MM-DD HH:MM:SS)
 const formatDateForDB = (date = new Date()) => {
@@ -24,20 +28,24 @@ const parseDays = (days) => {
   }
 };
 
-// Get all reminders
+// Get all reminders for the authenticated user
 router.get('/', async (req, res) => {
   try {
     const { medication_id } = req.query;
 
-    let sql = 'SELECT * FROM reminders';
-    const params = [];
+    let sql = `
+      SELECT r.* FROM reminders r
+      JOIN medications m ON r.medication_id = m.id
+      WHERE m.user_id = ?
+    `;
+    const params = [req.userId];
 
     if (medication_id) {
-      sql += ' WHERE medication_id = ?';
+      sql += ' AND r.medication_id = ?';
       params.push(medication_id);
     }
 
-    sql += ' ORDER BY created_at DESC';
+    sql += ' ORDER BY r.created_at DESC';
 
     const reminders = await query(sql, params);
 
@@ -54,13 +62,15 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Get a single reminder by ID
+// Get a single reminder by ID (only if owned by user)
 router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const reminders = await query(
-      'SELECT * FROM reminders WHERE id = ?',
-      [id]
+      `SELECT r.* FROM reminders r
+       JOIN medications m ON r.medication_id = m.id
+       WHERE r.id = ? AND m.user_id = ?`,
+      [id, req.userId]
     );
 
     if (reminders.length === 0) {
@@ -79,7 +89,7 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// Create a new reminder
+// Create a new reminder (only for user's own medications)
 router.post('/', async (req, res) => {
   try {
     const { medication_id, time, days } = req.body;
@@ -88,6 +98,16 @@ router.post('/', async (req, res) => {
       return res.status(400).json({
         error: 'medication_id, time, and days (array) are required'
       });
+    }
+
+    // Verify user owns the medication
+    const medication = await query(
+      'SELECT id FROM medications WHERE id = ? AND user_id = ?',
+      [medication_id, req.userId]
+    );
+
+    if (medication.length === 0) {
+      return res.status(404).json({ error: 'Medication not found' });
     }
 
     const id = uuidv4();
@@ -115,16 +135,36 @@ router.post('/', async (req, res) => {
   }
 });
 
-// Update a reminder
+// Update a reminder (only if owned by user)
 router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const { medication_id, time, days, status } = req.body;
 
+    // Verify ownership
+    const existing = await query(
+      `SELECT r.id FROM reminders r
+       JOIN medications m ON r.medication_id = m.id
+       WHERE r.id = ? AND m.user_id = ?`,
+      [id, req.userId]
+    );
+
+    if (existing.length === 0) {
+      return res.status(404).json({ error: 'Reminder not found' });
+    }
+
     const updates = [];
     const values = [];
 
     if (medication_id !== undefined) {
+      // Verify new medication is also owned by user
+      const med = await query(
+        'SELECT id FROM medications WHERE id = ? AND user_id = ?',
+        [medication_id, req.userId]
+      );
+      if (med.length === 0) {
+        return res.status(404).json({ error: 'Medication not found' });
+      }
       updates.push('medication_id = ?');
       values.push(medication_id);
     }
@@ -157,10 +197,6 @@ router.put('/:id', async (req, res) => {
       [id]
     );
 
-    if (updatedReminder.length === 0) {
-      return res.status(404).json({ error: 'Reminder not found' });
-    }
-
     const reminder = {
       ...updatedReminder[0],
       days: parseDays(updatedReminder[0].days)
@@ -173,19 +209,24 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// Delete a reminder
+// Delete a reminder (only if owned by user)
 router.delete('/:id', async (req, res) => {
   try {
     const { id } = req.params;
 
-    const result = await query(
-      'DELETE FROM reminders WHERE id = ?',
-      [id]
+    // Verify ownership before deleting
+    const existing = await query(
+      `SELECT r.id FROM reminders r
+       JOIN medications m ON r.medication_id = m.id
+       WHERE r.id = ? AND m.user_id = ?`,
+      [id, req.userId]
     );
 
-    if (result.affectedRows === 0) {
+    if (existing.length === 0) {
       return res.status(404).json({ error: 'Reminder not found' });
     }
+
+    await query('DELETE FROM reminders WHERE id = ?', [id]);
 
     res.status(204).send();
   } catch (err) {

@@ -4,18 +4,35 @@ import type { Medication, Reminder, ReminderLog, Note, MedicationFormData, Remin
 // Base URL for API - uses relative path when served from same server
 const OSC_API_BASE = import.meta.env.VITE_OSC_API_URL || '/api';
 
+// Get auth token from localStorage
+function getAuthToken(): string | null {
+  return localStorage.getItem('auth_token');
+}
+
 // Helper function for API calls
 async function fetchAPI<T>(endpoint: string, options?: RequestInit): Promise<T> {
   try {
+    const token = getAuthToken();
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    };
+
+    // Add auth token if available
+    if (token) {
+      (headers as Record<string, string>)['Authorization'] = `Bearer ${token}`;
+    }
+
     const response = await fetch(`${OSC_API_BASE}${endpoint}`, {
-      headers: {
-        'Content-Type': 'application/json',
-        ...options?.headers,
-      },
       ...options,
+      headers,
     });
 
     if (!response.ok) {
+      // If unauthorized, could redirect to login
+      if (response.status === 401) {
+        throw new Error('Authentication required');
+      }
       throw new Error(`API Error: ${response.statusText}`);
     }
 
