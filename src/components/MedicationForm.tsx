@@ -12,6 +12,7 @@ import {
   Typography,
   IconButton,
   CircularProgress,
+  Collapse,
 } from '@mui/material';
 import {
   Close as CloseIcon,
@@ -35,6 +36,8 @@ const DOSAGE_FORMS: DosageForm[] = [
   'lozenges',
 ];
 
+const QUANTITY_FORMS: DosageForm[] = ['tablets', 'capsules', 'lozenges'];
+
 interface MedicationFormProps {
   open: boolean;
   onClose: () => void;
@@ -46,9 +49,12 @@ const MedicationForm: React.FC<MedicationFormProps> = ({ open, onClose, editMedi
   const [formData, setFormData] = useState<MedicationFormData>({
     name: '',
     dosage_form: 'tablets',
+    total_quantity: null,
   });
   const [error, setError] = useState<string>('');
   const [submitting, setSubmitting] = useState(false);
+
+  const showQuantityField = QUANTITY_FORMS.includes(formData.dosage_form);
 
   // Populate form when editing
   useEffect(() => {
@@ -56,15 +62,31 @@ const MedicationForm: React.FC<MedicationFormProps> = ({ open, onClose, editMedi
       setFormData({
         name: editMedication.name,
         dosage_form: editMedication.dosage_form,
+        total_quantity: editMedication.total_quantity ?? null,
       });
     } else {
-      setFormData({ name: '', dosage_form: 'tablets' });
+      setFormData({ name: '', dosage_form: 'tablets', total_quantity: null });
     }
     setError('');
   }, [editMedication, open]);
 
   const handleChange = (field: keyof MedicationFormData, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+    if (field === 'dosage_form') {
+      const newForm = value as DosageForm;
+      setFormData((prev) => ({
+        ...prev,
+        dosage_form: newForm,
+        total_quantity: QUANTITY_FORMS.includes(newForm) ? prev.total_quantity : null,
+      }));
+    } else {
+      setFormData((prev) => ({ ...prev, [field]: value }));
+    }
+    setError('');
+  };
+
+  const handleQuantityChange = (value: string) => {
+    const parsed = value === '' ? null : parseInt(value, 10);
+    setFormData((prev) => ({ ...prev, total_quantity: parsed }));
     setError('');
   };
 
@@ -81,12 +103,15 @@ const MedicationForm: React.FC<MedicationFormProps> = ({ open, onClose, editMedi
     setSubmitting(true);
 
     try {
+      const payload: MedicationFormData = {
+        ...formData,
+        total_quantity: showQuantityField ? formData.total_quantity : null,
+      };
+
       if (editMedication) {
-        // Update existing medication
-        await updateMedication(editMedication.id, formData);
+        await updateMedication(editMedication.id, payload);
       } else {
-        // Create new medication
-        await createMedication(formData);
+        await createMedication(payload);
       }
       handleClose();
     } catch (err) {
@@ -97,7 +122,7 @@ const MedicationForm: React.FC<MedicationFormProps> = ({ open, onClose, editMedi
   };
 
   const handleClose = () => {
-    setFormData({ name: '', dosage_form: 'tablets' });
+    setFormData({ name: '', dosage_form: 'tablets', total_quantity: null });
     setError('');
     onClose();
   };
@@ -194,6 +219,25 @@ const MedicationForm: React.FC<MedicationFormProps> = ({ open, onClose, editMedi
                 </MenuItem>
               ))}
             </TextField>
+
+            <Collapse in={showQuantityField} timeout={220} unmountOnExit>
+              <TextField
+                label="Total Quantity"
+                value={formData.total_quantity ?? ''}
+                onChange={(e) => handleQuantityChange(e.target.value)}
+                fullWidth
+                type="number"
+                inputProps={{ min: 1, step: 1 }}
+                helperText={`Total number of ${formData.dosage_form} in the pack`}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    transition: 'box-shadow 0.15s ease',
+                    '&:hover': { boxShadow: '0 0 0 3px rgba(99,102,241,0.08)' },
+                    '&.Mui-focused': { boxShadow: '0 0 0 3px rgba(99,102,241,0.16)' },
+                  },
+                }}
+              />
+            </Collapse>
           </Box>
         </DialogContent>
 

@@ -16,6 +16,7 @@ export interface Medication {
   id: string;
   name: string;
   dosage_form: DosageForm;
+  total_quantity?: number | null;
   created_at: string;
   updated_at: string;
 }
@@ -68,6 +69,7 @@ export interface CalendarEvent {
 export interface MedicationFormData {
   name: string;
   dosage_form: DosageForm;
+  total_quantity?: number | null;
 }
 
 export interface ReminderFormData {

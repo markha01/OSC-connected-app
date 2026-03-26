@@ -40,6 +40,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentTab, onTabChange }) =>
         sx={{
           background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%)',
           borderBottom: 'none',
+          borderRadius: '0 0 16px 16px',
         }}
       >
         <Toolbar sx={{ py: 1 }}>

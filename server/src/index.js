@@ -74,6 +74,7 @@ async function initializeTables() {
       user_id VARCHAR(36) NOT NULL,
       name VARCHAR(255) NOT NULL,
       dosage_form ENUM('capsules', 'tablets', 'oral liquid', 'inhalers', 'injections', 'nasal spray', 'cream', 'ear drops', 'eye drops', 'lozenges') NOT NULL,
+      total_quantity INT NULL DEFAULT NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       INDEX idx_user_id (user_id),
@@ -127,6 +128,14 @@ async function initializeTables() {
     } catch (migrationErr) {
       // Column might already exist or table structure issue
       console.log('Migration check completed');
+    }
+
+    // Migration: Add total_quantity to existing medications table (IF NOT EXISTS is a no-op if already present)
+    try {
+      await conn.query('ALTER TABLE medications ADD COLUMN IF NOT EXISTS total_quantity INT NULL DEFAULT NULL');
+      console.log('✅ Migration: total_quantity column ensured on medications table');
+    } catch (migrationErr) {
+      console.error('Migration error (total_quantity):', migrationErr.message);
     }
 
     console.log('✅ Database tables initialized');

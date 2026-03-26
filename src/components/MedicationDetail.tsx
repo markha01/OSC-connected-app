@@ -21,6 +21,8 @@ import {
   CalendarToday as CalendarIcon,
   Schedule as ScheduleIcon,
   Add as AddIcon,
+  Inventory2 as InventoryIcon,
+  WarningAmber as WarningIcon,
 } from '@mui/icons-material';
 import type { Medication, Reminder } from '../types';
 import { useMedication } from '../contexts/MedicationContext';
@@ -36,7 +38,10 @@ interface MedicationDetailProps {
 }
 
 const MedicationDetail: React.FC<MedicationDetailProps> = ({ medication, onBack }) => {
-  const { error: medicationError } = useMedication();
+  const { medications, error: medicationError } = useMedication();
+  // Use live data from context so quantity stays up-to-date after taking a dose
+  const liveMedication = medications.find((m) => m.id === medication.id) ?? medication;
+  const quantity = liveMedication.total_quantity;
   const { getRemindersByMedicationId, deleteReminder } = useReminder();
   const [editFormOpen, setEditFormOpen] = useState(false);
   const [reminderFormOpen, setReminderFormOpen] = useState(false);
@@ -194,6 +199,49 @@ const MedicationDetail: React.FC<MedicationDetailProps> = ({ medication, onBack 
                     {dateUtils.formatDate(medication.updated_at)}
                   </Typography>
                 </Box>
+              </Box>
+            )}
+
+            {quantity != null && (
+              <Box>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <InventoryIcon sx={{ color: 'text.secondary', fontSize: 20 }} />
+                  <Box>
+                    <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
+                      Total Quantity
+                    </Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                      {quantity} remaining
+                    </Typography>
+                  </Box>
+                </Box>
+
+                {quantity <= 10 && (
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 0.75,
+                      mt: 1,
+                      ml: 4,
+                      px: 1.5,
+                      py: 0.75,
+                      borderRadius: 2,
+                      backgroundColor: 'rgba(245, 158, 11, 0.08)',
+                      border: '1px solid rgba(245, 158, 11, 0.25)',
+                      animation: 'fadeIn 0.3s ease-out',
+                      '@keyframes fadeIn': {
+                        from: { opacity: 0, transform: 'translateY(-4px)' },
+                        to: { opacity: 1, transform: 'translateY(0)' },
+                      },
+                    }}
+                  >
+                    <WarningIcon sx={{ fontSize: 15, color: '#d97706' }} />
+                    <Typography variant="caption" sx={{ color: '#d97706', fontWeight: 600 }}>
+                      Running low — this medication will soon be fully depleted
+                    </Typography>
+                  </Box>
+                )}
               </Box>
             )}
           </Box>

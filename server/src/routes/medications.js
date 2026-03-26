@@ -51,7 +51,7 @@ router.get('/:id', async (req, res) => {
 // Create a new medication for the authenticated user
 router.post('/', async (req, res) => {
   try {
-    const { name, dosage_form } = req.body;
+    const { name, dosage_form, total_quantity } = req.body;
 
     if (!name || !dosage_form) {
       return res.status(400).json({ error: 'Name and dosage_form are required' });
@@ -59,10 +59,11 @@ router.post('/', async (req, res) => {
 
     const id = uuidv4();
     const now = formatDateForDB();
+    const qty = total_quantity != null ? parseInt(total_quantity, 10) : null;
 
     await query(
-      'INSERT INTO medications (id, user_id, name, dosage_form, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)',
-      [id, req.userId, name, dosage_form, now, now]
+      'INSERT INTO medications (id, user_id, name, dosage_form, total_quantity, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [id, req.userId, name, dosage_form, qty, now, now]
     );
 
     const newMedication = await query(
@@ -81,7 +82,7 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, dosage_form } = req.body;
+    const { name, dosage_form, total_quantity } = req.body;
 
     // Verify ownership first
     const existing = await query(
@@ -104,6 +105,10 @@ router.put('/:id', async (req, res) => {
     if (dosage_form !== undefined) {
       updates.push('dosage_form = ?');
       values.push(dosage_form);
+    }
+    if (total_quantity !== undefined) {
+      updates.push('total_quantity = ?');
+      values.push(total_quantity != null ? parseInt(total_quantity, 10) : null);
     }
 
     if (updates.length === 0) {

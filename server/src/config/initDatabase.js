@@ -12,10 +12,14 @@ CREATE TABLE IF NOT EXISTS medications (
     'injections', 'nasal spray', 'cream', 'ear drops',
     'eye drops', 'lozenges'
   ) NOT NULL,
+  total_quantity INT NULL DEFAULT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   INDEX idx_created_at (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Add total_quantity to existing medications table if not present
+ALTER TABLE medications ADD COLUMN IF NOT EXISTS total_quantity INT NULL DEFAULT NULL;
 
 -- Reminders Table
 CREATE TABLE IF NOT EXISTS reminders (

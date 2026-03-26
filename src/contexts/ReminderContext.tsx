@@ -50,7 +50,7 @@ export const ReminderProvider: React.FC<ReminderProviderProps> = ({ children }) 
     medication: { id: string; name: string } | null;
   }>({ open: false, reminder: null, medication: null });
 
-  const { medications } = useMedication();
+  const { medications, updateMedication } = useMedication();
 
   // Fetch all reminders
   const fetchReminders = async (): Promise<void> => {
@@ -173,6 +173,15 @@ export const ReminderProvider: React.FC<ReminderProviderProps> = ({ children }) 
         taken,
       });
       setReminderLogs((prev) => [...prev, log]);
+
+      // Decrement total_quantity when the user marks a dose as taken
+      if (taken) {
+        const med = medications.find((m) => m.id === medicationId);
+        if (med && med.total_quantity != null && med.total_quantity > 0) {
+          await updateMedication(medicationId, { total_quantity: med.total_quantity - 1 });
+        }
+      }
+
       await fetchReminderLogs(); // Refresh logs
       buildCalendarEvents(); // Rebuild calendar events
     } catch (err) {
