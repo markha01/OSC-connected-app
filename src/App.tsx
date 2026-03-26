@@ -1,4 +1,5 @@
 // Main App Component
+import './App.css';
 import { useState, useEffect } from 'react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';

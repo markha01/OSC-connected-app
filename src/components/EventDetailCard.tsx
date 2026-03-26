@@ -144,7 +144,7 @@ const EventDetailCard: React.FC<EventDetailCardProps> = ({
     return 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)';
   };
 
-  // Card style - centered on page
+  // Card style - centered on page with spring entrance animation
   const cardStyle = {
     position: 'fixed' as const,
     top: '50%',
@@ -157,6 +157,7 @@ const EventDetailCard: React.FC<EventDetailCardProps> = ({
     overflow: 'auto',
     borderRadius: 4,
     boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+    animation: 'modalSpringIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both',
   };
 
   return (
@@ -173,6 +174,7 @@ const EventDetailCard: React.FC<EventDetailCardProps> = ({
           bgcolor: 'rgba(15, 23, 42, 0.6)',
           backdropFilter: 'blur(4px)',
           zIndex: 1299,
+          animation: 'backdropFadeIn 0.2s ease both',
         }}
       />
 
@@ -213,9 +215,12 @@ const EventDetailCard: React.FC<EventDetailCardProps> = ({
             sx={{
               color: 'white',
               bgcolor: 'rgba(255, 255, 255, 0.15)',
+              transition: 'transform 0.15s ease, background-color 0.15s ease',
               '&:hover': {
                 bgcolor: 'rgba(255, 255, 255, 0.25)',
+                transform: 'scale(1.1)',
               },
+              '&:active': { transform: 'scale(0.92)' },
             }}
           >
             <CloseIcon fontSize="small" />
@@ -290,9 +295,13 @@ const EventDetailCard: React.FC<EventDetailCardProps> = ({
                         sx={{
                           minWidth: 110,
                           background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                          transition: 'transform 0.15s ease, box-shadow 0.15s ease, background 0.2s ease',
                           '&:hover': {
                             background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+                            transform: 'translateY(-2px)',
+                            boxShadow: '0 6px 20px rgba(16, 185, 129, 0.45)',
                           },
+                          '&:active': { transform: 'scale(0.95)' },
                         }}
                       >
                         Yes
@@ -305,9 +314,13 @@ const EventDetailCard: React.FC<EventDetailCardProps> = ({
                         sx={{
                           minWidth: 110,
                           background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+                          transition: 'transform 0.15s ease, box-shadow 0.15s ease, background 0.2s ease',
                           '&:hover': {
                             background: 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)',
+                            transform: 'translateY(-2px)',
+                            boxShadow: '0 6px 20px rgba(239, 68, 68, 0.45)',
                           },
+                          '&:active': { transform: 'scale(0.95)' },
                         }}
                       >
                         No
@@ -376,7 +389,13 @@ const EventDetailCard: React.FC<EventDetailCardProps> = ({
                 size="small"
                 onClick={handleTimeChange}
                 disabled={saving || newTime === moment(event.start).format('HH:mm')}
-                sx={{ minWidth: 90, py: 1 }}
+                sx={{
+                  minWidth: 90,
+                  py: 1,
+                  transition: 'transform 0.15s ease, box-shadow 0.15s ease',
+                  '&:hover': { transform: 'translateY(-1px)', boxShadow: '0 4px 12px rgba(99, 102, 241, 0.35)' },
+                  '&:active': { transform: 'scale(0.95)' },
+                }}
               >
                 {saving ? <CircularProgress size={20} /> : 'Update'}
               </Button>
@@ -443,9 +462,13 @@ const EventDetailCard: React.FC<EventDetailCardProps> = ({
             sx={{
               py: 1.25,
               background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+              transition: 'transform 0.15s ease, box-shadow 0.15s ease, background 0.2s ease',
               '&:hover': {
                 background: 'linear-gradient(135deg, #d97706 0%, #b45309 100%)',
+                transform: 'translateY(-2px)',
+                boxShadow: '0 6px 20px rgba(245, 158, 11, 0.4)',
               },
+              '&:active': { transform: 'scale(0.98)' },
             }}
           >
             Save Note

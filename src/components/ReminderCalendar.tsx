@@ -1,5 +1,5 @@
 // Reminder Calendar Component
-import { useMemo, useState, useCallback } from 'react';
+import { useMemo, useState, useCallback, useRef } from 'react';
 import { Calendar, momentLocalizer } from 'react-big-calendar';
 import type { View, NavigateAction } from 'react-big-calendar';
 import moment from 'moment';
@@ -24,15 +24,29 @@ const ReminderCalendar = () => {
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [showTakenSection, setShowTakenSection] = useState(false);
 
+  // Ref for animation restart trick
+  const calendarWrapperRef = useRef<HTMLDivElement>(null);
+
+  // Restart CSS animation on the calendar wrapper
+  const triggerCalendarAnimation = useCallback(() => {
+    const el = calendarWrapperRef.current;
+    if (!el) return;
+    el.classList.remove('calendar-transition');
+    void el.offsetWidth; // force reflow to restart animation
+    el.classList.add('calendar-transition');
+  }, []);
+
   // Handle navigation (Back, Next, Today buttons)
   const handleNavigate = useCallback((newDate: Date, _view: View, _action: NavigateAction) => {
     setCurrentDate(newDate);
-  }, []);
+    triggerCalendarAnimation();
+  }, [triggerCalendarAnimation]);
 
   // Handle view change (Month, Week, Day buttons)
   const handleViewChange = useCallback((view: View) => {
     setCurrentView(view);
-  }, []);
+    triggerCalendarAnimation();
+  }, [triggerCalendarAnimation]);
 
   // Check if a date is today or in the past
   const isTodayOrPast = (date: Date): boolean => {
@@ -88,11 +102,26 @@ const ReminderCalendar = () => {
   const components = useMemo(
     () => ({
       event: ({ event }: { event: CalendarEvent }) => (
-        <Box sx={{ fontSize: '0.85rem', fontWeight: 500 }}>
-          <div>{event.title}</div>
-          <div style={{ fontSize: '0.75rem' }}>
-            {moment(event.start).format('h:mm A')}
-          </div>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, overflow: 'hidden', py: '1px' }}>
+          {/* Status dot */}
+          <Box
+            sx={{
+              width: 5,
+              height: 5,
+              borderRadius: '50%',
+              bgcolor: 'rgba(255,255,255,0.8)',
+              flexShrink: 0,
+              mt: '1px',
+            }}
+          />
+          <Box sx={{ overflow: 'hidden', minWidth: 0 }}>
+            <div style={{ fontSize: '0.82rem', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {event.title}
+            </div>
+            <div style={{ fontSize: '0.70rem', opacity: 0.85, letterSpacing: '0.01em' }}>
+              {moment(event.start).format('h:mm A')}
+            </div>
+          </Box>
         </Box>
       ),
     }),
@@ -102,6 +131,7 @@ const ReminderCalendar = () => {
   return (
     <>
       <Paper
+        className="calendar-entrance"
         sx={{
           p: { xs: 2, sm: 3 },
           background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
@@ -125,6 +155,16 @@ const ReminderCalendar = () => {
                 height: 48,
                 background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
                 boxShadow: '0 4px 14px rgba(99, 102, 241, 0.4)',
+                transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                '&:hover': {
+                  transform: 'scale(1.08)',
+                  boxShadow: '0 6px 20px rgba(99, 102, 241, 0.55)',
+                },
+                '@keyframes avatarFloat': {
+                  '0%, 100%': { transform: 'translateY(0px)' },
+                  '50%': { transform: 'translateY(-3px)' },
+                },
+                animation: 'avatarFloat 3.5s ease-in-out infinite',
               }}
             >
               <CalendarIcon sx={{ fontSize: 26 }} />
@@ -166,6 +206,8 @@ const ReminderCalendar = () => {
                 background: 'linear-gradient(135deg, #6366f1 0%, #818cf8 100%)',
                 color: 'white',
                 fontWeight: 500,
+                transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                '&:hover': { transform: 'translateY(-2px)', boxShadow: '0 4px 12px rgba(99, 102, 241, 0.4)' },
               }}
             />
             <Chip
@@ -175,6 +217,8 @@ const ReminderCalendar = () => {
                 background: 'linear-gradient(135deg, #10b981 0%, #34d399 100%)',
                 color: 'white',
                 fontWeight: 500,
+                transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                '&:hover': { transform: 'translateY(-2px)', boxShadow: '0 4px 12px rgba(16, 185, 129, 0.4)' },
               }}
             />
             <Chip
@@ -184,6 +228,8 @@ const ReminderCalendar = () => {
                 background: 'linear-gradient(135deg, #ef4444 0%, #f87171 100%)',
                 color: 'white',
                 fontWeight: 500,
+                transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                '&:hover': { transform: 'translateY(-2px)', boxShadow: '0 4px 12px rgba(239, 68, 68, 0.4)' },
               }}
             />
           </Box>
@@ -198,22 +244,24 @@ const ReminderCalendar = () => {
             },
           }}
         >
-          <Calendar<CalendarEvent>
-            localizer={localizer}
-            events={calendarEvents}
-            startAccessor="start"
-            endAccessor="end"
-            style={{ height: '100%' }}
-            eventPropGetter={eventStyleGetter}
-            onSelectEvent={handleSelectEvent}
-            components={components}
-            views={['month', 'week', 'day']}
-            view={currentView}
-            date={currentDate}
-            onNavigate={handleNavigate}
-            onView={handleViewChange}
-            popup
-          />
+          <div ref={calendarWrapperRef} className="calendar-transition" style={{ height: '100%' }}>
+            <Calendar<CalendarEvent>
+              localizer={localizer}
+              events={calendarEvents}
+              startAccessor="start"
+              endAccessor="end"
+              style={{ height: '100%' }}
+              eventPropGetter={eventStyleGetter}
+              onSelectEvent={handleSelectEvent}
+              components={components}
+              views={['month', 'week', 'day']}
+              view={currentView}
+              date={currentDate}
+              onNavigate={handleNavigate}
+              onView={handleViewChange}
+              popup
+            />
+          </div>
         </Box>
       </Paper>
 
