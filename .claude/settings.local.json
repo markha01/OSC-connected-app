@@ -6,7 +6,8 @@
       "Bash(npm run build:*)",
       "Bash(npm run init-db:*)",
       "Bash(git commit:*)",
-      "Bash(npx vite build)"
+      "Bash(npx vite build)",
+      "mcp__claude_ai_OSC__set-parameter"
     ]
   }
 }

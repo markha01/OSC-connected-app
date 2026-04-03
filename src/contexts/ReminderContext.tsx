@@ -166,19 +166,45 @@ export const ReminderProvider: React.FC<ReminderProviderProps> = ({ children }) 
     setLoading(true);
     setError(null);
     try {
-      const log = await reminderLogService.create({
-        reminder_id: reminderId,
-        medication_id: medicationId,
-        scheduled_time: new Date().toISOString(),
-        taken,
-      });
-      setReminderLogs((prev) => [...prev, log]);
+      const today = new Date().toDateString();
+      const existingLog = reminderLogs.find(
+        (l) =>
+          l.reminder_id === reminderId &&
+          new Date(l.scheduled_time).toDateString() === today
+      );
 
-      // Decrement total_quantity when the user marks a dose as taken
-      if (taken) {
-        const med = medications.find((m) => m.id === medicationId);
-        if (med && med.total_quantity != null && med.total_quantity > 0) {
-          await updateMedication(medicationId, { total_quantity: med.total_quantity - 1 });
+      if (existingLog) {
+        // Update the existing log instead of creating a duplicate
+        const updatedLog = await reminderLogService.update(existingLog.id, taken);
+        setReminderLogs((prev) =>
+          prev.map((l) => (l.id === existingLog.id ? updatedLog : l))
+        );
+
+        // Adjust quantity only for the net change in choice
+        if (existingLog.taken !== taken) {
+          const med = medications.find((m) => m.id === medicationId);
+          if (med && med.total_quantity != null) {
+            const delta = taken ? -1 : +1;
+            const newQty = med.total_quantity + delta;
+            await updateMedication(medicationId, { total_quantity: Math.max(0, newQty) });
+          }
+        }
+      } else {
+        // No prior log for today — create a new one
+        const log = await reminderLogService.create({
+          reminder_id: reminderId,
+          medication_id: medicationId,
+          scheduled_time: new Date().toISOString(),
+          taken,
+        });
+        setReminderLogs((prev) => [...prev, log]);
+
+        // Decrement total_quantity when the user marks a dose as taken
+        if (taken) {
+          const med = medications.find((m) => m.id === medicationId);
+          if (med && med.total_quantity != null && med.total_quantity > 0) {
+            await updateMedication(medicationId, { total_quantity: med.total_quantity - 1 });
+          }
         }
       }
 
