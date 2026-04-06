@@ -1,5 +1,5 @@
 // MariaDB Database Configuration
-import mariadb from 'mariadb';
+import { createPool, createConnection } from 'mariadb';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -11,7 +11,7 @@ async function initPool() {
   if (pool) return pool;
 
   // First, ensure the database exists
-  const initConn = await mariadb.createConnection({
+  const initConn = await createConnection({
     host: process.env.DB_HOST,
     port: process.env.DB_PORT || 3306,
     user: process.env.DB_USER,
@@ -28,7 +28,7 @@ async function initPool() {
   }
 
   // Now create the pool with the database
-  pool = mariadb.createPool({
+  pool = createPool({
     host: process.env.DB_HOST,
     port: process.env.DB_PORT || 3306,
     user: process.env.DB_USER,

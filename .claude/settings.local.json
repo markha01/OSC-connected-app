@@ -7,7 +7,8 @@
       "Bash(npm run init-db:*)",
       "Bash(git commit:*)",
       "Bash(npx vite build)",
-      "mcp__claude_ai_OSC__set-parameter"
+      "mcp__claude_ai_OSC__set-parameter",
+      "mcp__claude_ai_OSC__get-my-app-logs"
     ]
   }
 }
